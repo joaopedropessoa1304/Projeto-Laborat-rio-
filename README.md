@@ -369,6 +369,27 @@ python3 serial_dump.py COM3                    # captura o resultado
 ```
 
 ---
+**Tabela por enquanto:**
+| Instrução | `funct3` | `funct7` | `Operation` |
+|---|---:|---:|---:|
+| ADD | `000` | `0000000` | `1` |
+| SUB | `000` | `0100000` | `2` |
+| OR | `110` | `0000000` | `4` |
+| AND | `111` | `0000000` | `5` |
+| SLT | `010` | `0000000` | `11` |
+| XOR | ? | ? | ? |
+| SLL | ? | ? | ? |
+| SRL | ? | ? | ? |
+| SRA | ? | ? | ? |
+| SLTU | ? | ? | ? |
+
+
+
+
+
+
+
+
 
 ## Recursos
 
