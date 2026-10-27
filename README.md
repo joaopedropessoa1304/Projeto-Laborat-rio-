@@ -31,7 +31,7 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 | B-type             | 6         | 1 (BEQ)       | 5        |
 | U-type             | 2         | 0             | 2        |
 | J-type             | 2         | 0             | 2        |
-| **Total**          | **37**    | **8**         | **29**   |
+| **Total**          | **37**    | **8**         | **24**   |
 
 ### Instruções a implementar — Etapa 01
 
