@@ -21,7 +21,7 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 | Categoria          | Total ISA | Implementadas | Faltando |
 |--------------------|:---------:|:-------------:|:--------:|
-| R-type             | 10        | 5             | 5        |
+| R-type             | 10        | 10             | 0        |
 | I-type aritmético  | 9         | 0             | 9        |
 | I-type load        | 5         | 1 (LW)        | 4        |
 | S-type             | 3         | 1 (SW)        | 2        |
