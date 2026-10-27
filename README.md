@@ -1,6 +1,6 @@
 # RV32I Pipelined Base Project
 
-Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em SystemVerilog, baseado nas seções 4.6 a 4.10 de *Computer Organization and Design: RISC-V Edition* (Patterson & Hennessy). O projeto tem como plataforma alvo a placa **DE2-115** (Intel Cyclone IV E) e é estruturado para servir de base para extensões do conjunto de instruções pelos alunos
+Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em SystemVerilog, baseado nas seções 4.6 a 4.10 de *Computer Organization and Design: RISC-V Edition* (Patterson & Hennessy). O projeto tem como plataforma alvo a placa **DE2-115** (Intel Cyclone IV E) e é estruturado para servir de base para extensões do conjunto de instruções pelos alunos.
 
 ---
 
@@ -369,6 +369,27 @@ python3 serial_dump.py COM3                    # captura o resultado
 ```
 
 ---
+**Tabela por enquanto:**
+| Instrução | `funct3` | `funct7` | `Operation` |
+|---|---:|---:|---:|
+| ADD | `000` | `0000000` | `1` |
+| SUB | `000` | `0100000` | `2` |
+| OR | `110` | `0000000` | `4` |
+| AND | `111` | `0000000` | `5` |
+| SLT | `010` | `0000000` | `11` |
+| XOR | `100`| `0000000` | `3` |
+| SLL | `001` | `0000000` | `6` |
+| SRL | `101` | `0000000` | `7` |
+| SRA | `101` | `0100000` | `8` |
+| SLTU | `011`| `0000000` | `9` |
+
+
+
+
+
+
+
+
 
 ## Recursos
 
