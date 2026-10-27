@@ -4,6 +4,9 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 ---
 
+//Adicionado as operações da etapa 1, mas ainda falta testar.
+
+
 ## Instruções suportadas
 
 | # | Instrução | Tipo | Opcode  | Status |
