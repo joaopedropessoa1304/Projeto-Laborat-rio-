@@ -4,6 +4,9 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 ---
 
+//Adicionado as operações da etapa 1, mas ainda falta testar.
+
+
 ## Instruções suportadas
 
 | # | Instrução | Tipo | Opcode  | Status |
@@ -21,14 +24,14 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 | Categoria          | Total ISA | Implementadas | Faltando |
 |--------------------|:---------:|:-------------:|:--------:|
-| R-type             | 10        | 5             | 5        |
+| R-type             | 10        | 10             | 0        |
 | I-type aritmético  | 9         | 0             | 9        |
 | I-type load        | 5         | 1 (LW)        | 4        |
 | S-type             | 3         | 1 (SW)        | 2        |
 | B-type             | 6         | 1 (BEQ)       | 5        |
 | U-type             | 2         | 0             | 2        |
 | J-type             | 2         | 0             | 2        |
-| **Total**          | **37**    | **8**         | **29**   |
+| **Total**          | **37**    | **8**         | **24**   |
 
 ### Instruções a implementar — Etapa 01
 
@@ -36,11 +39,11 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
-| 1 | `XOR`     | R    | 0110011 | ❌ |
-| 2 | `SLL`     | R    | 0110011 | ❌ |
-| 3 | `SRL`     | R    | 0110011 | ❌ |
-| 4 | `SRA`     | R    | 0110011 | ❌ |
-| 5 | `SLTU`    | R    | 0110011 | ❌ |
+| 1 | `XOR`     | R    | 0110011 | ✅ |
+| 2 | `SLL`     | R    | 0110011 | ✅ |
+| 3 | `SRL`     | R    | 0110011 | ✅ |
+| 4 | `SRA`     | R    | 0110011 | ✅ |
+| 5 | `SLTU`    | R    | 0110011 | ✅ |
 
 #### Aritmética, lógica e deslocamentos com imediatos (I-type)
 
