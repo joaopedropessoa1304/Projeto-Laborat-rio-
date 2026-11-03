@@ -58,6 +58,11 @@ module pl_control (
                 RegWrite = 1'b1;
                 ALUOp    = 2'b10;
             end
+            I_TYPE: begin
+                ALUSrc = 1'b1;
+                MemtoReg = 1'b0;
+                RegWrite = 1'b1;
+                ALUOp = 2'b11;
             LOAD: begin
                 ALUSrc   = 1'b1;
                 MemtoReg = 1'b1;
