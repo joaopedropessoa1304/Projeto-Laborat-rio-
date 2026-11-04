@@ -4,8 +4,6 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 ---
 
-//Adicionado as operações da etapa 1, mas ainda falta testar.
-teste já foi feito.
 
 
 
@@ -387,6 +385,8 @@ python3 serial_dump.py COM3                    # captura o resultado
 | SRL | `101` | `0000000` | `7` |
 | SRA | `101` | `0100000` | `8` |
 | SLTU | `011`| `0000000` | `9` |
+| ADDI | `000` | `0000000` | `1`|
+
 
 
 
