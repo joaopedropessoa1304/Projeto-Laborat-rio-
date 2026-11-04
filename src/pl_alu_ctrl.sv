@@ -41,6 +41,7 @@ module pl_alu_ctrl (
                     3'h3: Operation = 4'd09;  //SLTU
                     default: Operation = 4'd01;
                 endcase
+            end
 
             2'b11: begin                // I_TYPE
                 case (Funct3)
