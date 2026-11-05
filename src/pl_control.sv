@@ -64,6 +64,7 @@ module pl_control (
                 MemtoReg = 1'b0;
                 RegWrite = 1'b1;
                 ALUOp = 2'b11;
+            end
             LOAD: begin
                 ALUSrc   = 1'b1;
                 MemtoReg = 1'b1;
