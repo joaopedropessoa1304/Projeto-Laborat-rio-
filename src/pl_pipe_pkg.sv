@@ -28,6 +28,8 @@ package pl_pipe_pkg;
         logic [1:0]  alu_op;
         logic [1:0]  alu_src_a;
         logic        branch;
+        logic        jump;       // JAL
+        logic        jalr;       // JALR
         // dados
         logic [31:0] pc;
         logic [31:0] rd1;       // saida 1 do banco de registradores
