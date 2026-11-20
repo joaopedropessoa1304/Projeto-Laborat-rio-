@@ -4,10 +4,11 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 ---
 
-
-
-
 ## Instruções suportadas
+
+O processador implementa as **37 instruções do RV32I**.
+
+### Instruções do projeto base
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
@@ -24,18 +25,18 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 
 | Categoria          | Total ISA | Implementadas | Faltando |
 |--------------------|:---------:|:-------------:|:--------:|
-| R-type             | 10        | 10             | 0        |
-| I-type aritmético  | 9         | 7             | 2        |
-| I-type load        | 5         | 1 (LW)        | 4        |
-| S-type             | 3         | 1 (SW)        | 2        |
-| B-type             | 6         | 1 (BEQ)       | 5        |
-| U-type             | 2         | 0             | 2        |
-| J-type             | 2         | 0             | 2        |
-| **Total**          | **37**    | **20**         | **17**   |
+| R-type             | 10        | 10            | 0        |
+| I-type aritmético  | 9         | 9             | 0        |
+| I-type load        | 5         | 5             | 0        |
+| S-type             | 3         | 3             | 0        |
+| B-type             | 6         | 6             | 0        |
+| U-type             | 2         | 2             | 0        |
+| J-type (JAL + JALR)| 2         | 2             | 0        |
+| **Total**          | **37**    | **37**        | **0**    |
 
-### Instruções a implementar — Etapa 01
+### Etapa 01 — Aritmética, lógica e deslocamentos
 
-#### Aritmética, lógica e deslocamentos (R-type)
+#### Registrador-registrador (R-type)
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
@@ -45,59 +46,61 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 | 4 | `SRA`     | R    | 0110011 | ✅ |
 | 5 | `SLTU`    | R    | 0110011 | ✅ |
 
-#### Aritmética, lógica e deslocamentos com imediatos (I-type)
+#### Com imediato (I-type aritmético, opcode `0010011`)
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
 | 1 | `ADDI`    | I    | 0010011 | ✅ |
 | 2 | `ANDI`    | I    | 0010011 | ✅ |
 | 3 | `ORI`     | I    | 0010011 | ✅ |
-| 4 | `SLTI`    | I    | 0010011 | ✅ |
-| 5 | `SLLI`    | I    | 0010011 | ✅ |
-| 6 | `SRLI`    | I    | 0010011 | ✅ |
-| 7 | `SRAI`    | I    | 0010011 | ✅ |
+| 4 | `XORI`    | I    | 0010011 | ✅ |
+| 5 | `SLTI`    | I    | 0010011 | ✅ |
+| 6 | `SLTIU`   | I    | 0010011 | ✅ |
+| 7 | `SLLI`    | I    | 0010011 | ✅ |
+| 8 | `SRLI`    | I    | 0010011 | ✅ |
+| 9 | `SRAI`    | I    | 0010011 | ✅ |
 
-### Instruções a implementar — Etapa 02
+### Etapa 02 — Memória, desvios, jumps e imediato superior
 
 #### Acesso à memória — loads (I-type)
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
-| 1 | `LB`      | I    | 0000011 | ❌ |
-| 2 | `LH`      | I    | 0000011 | ❌ |
-| 3 | `LBU`     | I    | 0000011 | ❌ |
-| 4 | `LHU`     | I    | 0000011 | ❌ |
+| 1 | `LB`      | I    | 0000011 | ✅ |
+| 2 | `LH`      | I    | 0000011 | ✅ |
+| 3 | `LBU`     | I    | 0000011 | ✅ |
+| 4 | `LHU`     | I    | 0000011 | ✅ |
 
 #### Acesso à memória — stores (S-type)
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
-| 1 | `SB`      | S    | 0100011 | ❌ |
-| 2 | `SH`      | S    | 0100011 | ❌ |
+| 1 | `SB`      | S    | 0100011 | ✅ |
+| 2 | `SH`      | S    | 0100011 | ✅ |
 
 #### Desvios condicionais (B-type)
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
-| 1 | `BNE`     | B    | 1100011 | ❌ |
-| 2 | `BLT`     | B    | 1100011 | ❌ |
-| 3 | `BGE`     | B    | 1100011 | ❌ |
-| 4 | `BLTU`    | B    | 1100011 | ❌ |
-| 5 | `BGEU`    | B    | 1100011 | ❌ |
+| 1 | `BNE`     | B    | 1100011 | ✅ |
+| 2 | `BLT`     | B    | 1100011 | ✅ |
+| 3 | `BGE`     | B    | 1100011 | ✅ |
+| 4 | `BLTU`    | B    | 1100011 | ✅ |
+| 5 | `BGEU`    | B    | 1100011 | ✅ |
 
-#### Jumps (J-type)
+#### Jumps
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
-| 1 | `JAL`     | J    | 1101111 | ❌ |
-| 2 | `JALR`    | I    | 1100111 | ❌ |
+| 1 | `JAL`     | J    | 1101111 | ✅ |
+| 2 | `JALR`    | I    | 1100111 | ✅ |
 
 #### Imediato superior (U-type)
 
 | # | Instrução | Tipo | Opcode  | Status |
 |---|-----------|------|---------|:------:|
-| 1 | `LUI`     | U    | 0110111 | ❌ |
-| 2 | `AUIPC`   | U    | 0010111 | ❌ |
+| 1 | `LUI`     | U    | 0110111 | ✅ |
+| 2 | `AUIPC`   | U    | 0010111 | ✅ |
 
 ---
 
@@ -111,7 +114,7 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 +------+     +------+     +------+     +------+     +------+
   Busca      Decode       Execução     Memória     Write-back
   instrução  Regs         ALU          dmem/MMIO   Regfile
-             Sign-ext     Branch
+             Sign-ext     Br/Jump
 ```
 
 **Registradores de pipeline:** `IF/ID`, `ID/EX`, `EX/MEM`, `MEM/WB` (definidos em `pl_pipe_pkg.sv`).
@@ -122,11 +125,80 @@ Processador RISC-V de 32 bits com pipeline de 5 estágios implementado em System
 |--------|-----------|---------|
 | RAW (dado) | Forwarding | EX/MEM → EX e MEM/WB → EX (`pl_forward.sv`) |
 | Load-use | Stall | 1 bolha inserida em ID/EX (`pl_hazard.sv`) |
-| Branch taken | Flush | 2 NOPs (IF e ID) na resolução em EX (`pl_datapath.sv`) |
+| Branch tomado, JAL, JALR | Flush | 2 NOPs (IF e ID) na resolução em EX (`pl_datapath.sv`) |
 
-**Resolução de branch no estágio EX:** quando `BEQ` é tomado, o PC retorna ao alvo e os dois estágios anteriores são esvaziados. O custo é de 2 ciclos de penalidade por branch tomado.
+**Resolução de branch e jump no estágio EX:** quando um branch é tomado, ou quando a instrução é `JAL`/`JALR`, o PC é redirecionado ao alvo e os dois estágios anteriores (IF e ID) são esvaziados. O custo é de 2 ciclos de penalidade por desvio tomado.
 
 **Banco de registradores com escrita em negedge:** a escrita ocorre na borda de descida do clock, garantindo que o estágio ID leia o valor atualizado no próximo posedge sem necessidade de forwarding WB→ID explícito.
+
+### Desvios condicionais (BEQ, BNE, BLT, BGE, BLTU, BGEU)
+
+O comparador fica no estágio EX e usa rs1 e rs2 **já adiantados** pelo forwarding. A condição é escolhida pelo `funct3`:
+
+| `funct3` | Instrução | Condição |
+|:--------:|-----------|----------|
+| `000` | `BEQ`  | `rs1 == rs2` |
+| `001` | `BNE`  | `rs1 != rs2` |
+| `100` | `BLT`  | `rs1 < rs2` (com sinal) |
+| `101` | `BGE`  | `rs1 >= rs2` (com sinal) |
+| `110` | `BLTU` | `rs1 < rs2` (sem sinal) |
+| `111` | `BGEU` | `rs1 >= rs2` (sem sinal) |
+
+O alvo do branch é `PC + imm_B`.
+
+### JAL e JALR
+
+| | `JAL` | `JALR` |
+|---|---|---|
+| Formato | J | I |
+| Alvo | `PC + imm_J` | `(rs1 + imm_I) & ~1` |
+| Alcance | ±1 MiB (relativo ao PC) | qualquer endereço de 32 bits |
+| Link | `rd ← PC + 4` | `rd ← PC + 4` |
+| Uso típico | chamar função, `j label` (`jal x0, label`) | retornar (`jalr x0, x1, 0`), ponteiro de função |
+
+Como funciona no pipeline (`pl_datapath.sv`):
+
+```systemverilog
+assign branch_target = id_ex.jalr ? ((fwd_srca + id_ex.imm_ext) & 32'hFFFF_FFFE)
+                                  : (id_ex.pc + id_ex.imm_ext);
+assign pc_src        = (id_ex.branch && br_taken) || id_ex.jump || id_ex.jalr;
+assign ex_result     = (id_ex.jump || id_ex.jalr) ? (id_ex.pc + 32'd4) : alu_result;
+```
+
+- O `JAL` reaproveita o somador `PC + imm` do branch. O `JALR` usa `rs1` já adiantado e **zera o bit 0** do alvo, como manda a especificação.
+- O valor de link (`PC + 4`) entra no lugar do resultado da ALU (`ex_result`). Assim ele segue o caminho normal EX/MEM → MEM/WB e também pode ser adiantado por forwarding, sem mux novo no write-back.
+- Os dois sempre desviam, então sempre fazem o flush de IF e ID.
+
+### Acesso à memória por byte e meia-palavra
+
+`pl_dmem` tem habilitação de escrita por byte (`ByteEn[3:0]`). O estágio MEM posiciona o dado e liga os bytes certos pelo `funct3` e pelos 2 bits baixos do endereço:
+
+| Instrução | Dado escrito | `ByteEn` |
+|-----------|--------------|----------|
+| `SB` | byte replicado nos 4 bytes | `0001 << offset` |
+| `SH` | meia-palavra replicada | `0011` (offset 0) ou `1100` (offset 2) |
+| `SW` | palavra inteira | `1111` |
+
+Na leitura, a palavra é deslocada pelo offset e formatada pelo `funct3`: `LB`/`LH` estendem o sinal, `LBU`/`LHU` completam com zeros e `LW` devolve a palavra inteira. A formatação vale só para a memória de dados; leituras de MMIO continuam sendo de 32 bits.
+
+O acesso deve ser alinhado (`SH`/`LH` em endereço par, `SW`/`LW` em múltiplo de 4); acesso desalinhado não é tratado.
+
+### Unidade de controle
+
+| Sinal | R-type | OP-IMM | load | store | branch | `LUI` | `AUIPC` | `JAL` | `JALR` |
+|-------|:------:|:------:|:----:|:-----:|:------:|:-----:|:-------:|:-----:|:------:|
+| `ALUSrc`   | 0 | 1 | 1 | 1 | 0 | 1 | 1 | 0 | 1 |
+| `ALUSrcA`  | 00 | 00 | 00 | 00 | 00 | 10 | 01 | 00 | 00 |
+| `MemtoReg` | 0 | 0 | 1 | - | - | 0 | 0 | 0 | 0 |
+| `RegWrite` | 1 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 1 |
+| `MemRead`  | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
+| `MemWrite` | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| `Branch`   | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 |
+| `Jump`     | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| `Jalr`     | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 |
+| `ALUOp`    | 10 | 11 | 00 | 00 | 01 | 00 | 00 | 00 | 00 |
+
+`ALUSrcA` escolhe a entrada A da ALU (depois do forwarding): `00` = rs1, `01` = PC (usado pelo `AUIPC`), `10` = zero (usado pelo `LUI`, que vira `0 + imm`).
 
 ### Mapa de memória
 
@@ -148,13 +220,27 @@ Seleção: `alu_result[10] = 1` redireciona o acesso ao controlador MMIO (`pl_mm
 
 ### ALU — codificação de operação
 
-| Operation | Instrução |
-|-----------|-----------|
-| `4'd01` ADD | LW, SW, ADD |
-| `4'd02` SUB | BEQ (comparação) |
-| `4'd04` OR  | OR |
-| `4'd05` AND | AND |
-| `4'd11` SLT | SLT |
+| Operation | Operação | Instruções |
+|-----------|----------|------------|
+| `4'd01` | ADD  | LW, SW, ADD, ADDI, LUI, AUIPC (e loads/stores em geral) |
+| `4'd02` | SUB  | SUB |
+| `4'd03` | XOR  | XOR, XORI |
+| `4'd04` | OR   | OR, ORI |
+| `4'd05` | AND  | AND, ANDI |
+| `4'd06` | SLL  | SLL, SLLI |
+| `4'd07` | SRL  | SRL, SRLI |
+| `4'd08` | SRA  | SRA, SRAI |
+| `4'd09` | SLTU | SLTU, SLTIU |
+| `4'd11` | SLT  | SLT, SLTI |
+
+O campo `ALUOp` (vindo da unidade de controle) diz como o `pl_alu_ctrl` escolhe a operação:
+
+| `ALUOp` | Usado por | Operação |
+|:-------:|-----------|----------|
+| `00` | load, store, LUI, AUIPC, JAL, JALR | ADD |
+| `01` | branch | SUB (a decisão do branch vem do comparador dedicado) |
+| `10` | R-type | decodificada por `funct3` / `funct7` |
+| `11` | I-type aritmético | decodificada por `funct3` (`funct7[5]` só diferencia SRLI de SRAI) |
 
 ---
 
@@ -166,12 +252,13 @@ rv32i_pipelined_base_project/
 ├── src/                        Código-fonte SystemVerilog
 │   ├── pl_pipe_pkg.sv          Structs dos registradores de pipeline
 │   ├── pl_top.sv               Top-level (PLL 50→10 MHz + CPU)
+│   ├── pl_top_no_pll.sv        Top-level alternativo, sem PLL (clock de 50 MHz direto)
 │   ├── pl_cpu.sv               Wrapper: Control + ALU_Ctrl + Datapath
 │   ├── pl_control.sv           Unidade de controle (estágio ID)
 │   ├── pl_alu_ctrl.sv          Controle da ALU (estágio EX)
 │   ├── pl_alu.sv               ALU 32 bits
 │   ├── pl_regfile.sv           Banco de registradores 32×32 b
-│   ├── pl_sign_ext.sv          Extensão de sinal I/S/B
+│   ├── pl_sign_ext.sv          Extensão de sinal I/S/B/U/J
 │   ├── pl_imem.sv              Memória de instruções 256×32 b (MIF)
 │   ├── pl_dmem.sv              Memória de dados 256×32 b (MIF)
 │   ├── pl_mmio.sv              Controlador MMIO (SW/KEY/LED/UART)
@@ -183,10 +270,10 @@ rv32i_pipelined_base_project/
 │   └── pll_10mhz.v             PLL Altera (50 MHz → 10 MHz)
 │
 ├── mifs/                       Arquivos de inicialização de memória
-│   ├── instruction.mif         Programa de teste padrão
-│   ├── data.mif                Dados iniciais do programa de teste
-│   ├── mmio_test_program.mif   Programa de teste MMIO + UART
-│   └── mmio_test_data.mif      Dados para o teste MMIO
+│   ├── instruction_halt_serial.mif  Programa de teste (hazards + "HALT!" na serial + LEDs)
+│   ├── data_halt_serial.mif         Dados iniciais desse programa
+│   ├── mmio_test_program.mif        Programa de teste MMIO + UART
+│   └── mmio_test_data.mif           Dados para o teste MMIO
 │
 ├── assembler/
 │   ├── assembler.py            Montador Python: assembly → .mif / dump
@@ -203,6 +290,7 @@ rv32i_pipelined_base_project/
 │   ├── program.hex             Imagem da instrução (.hex para $readmemh)
 │   ├── data.hex                Imagem dos dados (.hex para $readmemh)
 │   ├── golden.txt              Saída esperada pelo testbench
+│   ├── teste_etapa1/           Teste da etapa 1 (.asm, program.hex e golden.txt)
 │   └── output.txt              Saída gerada na última simulação
 │
 └── quartus/                    Projeto Quartus Prime para síntese
@@ -222,7 +310,7 @@ rv32i_pipelined_base_project/
 
 O testbench detecta o halt automaticamente (repetição periódica do PC causada pelo `beq x0, x0, 0`), imprime o estado final dos registradores e da memória, e compara a saída com `modelsim/golden.txt`.
 
-**Programa de teste padrão (`mifs/instruction.mif`):**
+**Programa de teste padrão (parte 1 de `mifs/instruction_halt_serial.mif`):**
 
 ```
 000: lw  x1,  0(x0)   x1 = 10
@@ -330,6 +418,21 @@ sw   x3,8(x0)
 beq  x1,x2,-4
 ```
 
+Exemplos das instruções da etapa 02:
+
+```
+addi  x1,x0,8
+lui   x5,1
+lb    x3,1(x2)
+sb    x3,2(x2)
+bne   x1,x2,8
+jal   x1,8
+jalr  x0,x1,0
+```
+
+- Offsets de branch e de `jal` são em **bytes** (o `jal x1,8` pula a próxima instrução).
+- O `jalr` usa a forma `jalr rd,rs1,imm` (não `imm(rs1)`). O retorno de função é `jalr x0,x1,0`.
+
 Uma instrução por linha, sem rótulos, sem comentários. O argumento de arquivo é opcional — o padrão é `instructions.txt`.
 
 ---
@@ -372,29 +475,37 @@ python3 serial_dump.py COM3                    # captura o resultado
 ```
 
 ---
-**Tabela por enquanto:**
+
+## Decodificação das operações da ALU
+
+#### R-type
+
 | Instrução | `funct3` | `funct7` | `Operation` |
 |---|---:|---:|---:|
-| ADD | `000` | `0000000` | `1` |
-| SUB | `000` | `0100000` | `2` |
-| OR | `110` | `0000000` | `4` |
-| AND | `111` | `0000000` | `5` |
-| SLT | `010` | `0000000` | `11` |
-| XOR | `100`| `0000000` | `3` |
-| SLL | `001` | `0000000` | `6` |
-| SRL | `101` | `0000000` | `7` |
-| SRA | `101` | `0100000` | `8` |
-| SLTU | `011`| `0000000` | `9` |
-| ADDI | `000` | `0000000` | `1`|
+| ADD  | `000` | `0000000` | `1` |
+| SUB  | `000` | `0100000` | `2` |
+| XOR  | `100` | `0000000` | `3` |
+| OR   | `110` | `0000000` | `4` |
+| AND  | `111` | `0000000` | `5` |
+| SLL  | `001` | `0000000` | `6` |
+| SRL  | `101` | `0000000` | `7` |
+| SRA  | `101` | `0100000` | `8` |
+| SLTU | `011` | `0000000` | `9` |
+| SLT  | `010` | `0000000` | `11` |
 
+#### I-type aritmético (opcode `0010011`)
 
-
-
-
-
-
-
-
+| Instrução | `funct3` | `funct7` | `Operation` |
+|---|---:|---:|---:|
+| ADDI  | `000` | — | `1` |
+| SLLI  | `001` | `0000000` | `6` |
+| SLTI  | `010` | — | `11` |
+| SLTIU | `011` | — | `9` |
+| XORI  | `100` | — | `3` |
+| SRLI  | `101` | `0000000` | `7` |
+| SRAI  | `101` | `0100000` | `8` |
+| ORI   | `110` | — | `4` |
+| ANDI  | `111` | — | `5` |
 
 ## Recursos
 
