@@ -42,14 +42,26 @@ module pl_top (
         .locked (pll_locked)
     );
 
-    // O CPU so sai do reset quando a PLL esta travada e KEY[0] nao e pressionado
-    assign rst_n = pll_locked & KEY[0];
+    // O CPU so sai do reset quando a PLL esta travada e KEY[0] nao e pressionado.
+    // O reset entra de forma assincrona, mas a SAIDA do reset e sincronizada
+    // com o clock da CPU (2 flip-flops), para todos os registradores sairem do
+    // reset no mesmo ciclo (evita metaestabilidade na liberacao do reset).
+    logic rst_req_n;
+    logic [1:0] rst_sync;
+    assign rst_req_n = pll_locked & KEY[0];
+
+    always_ff @(posedge clk or negedge rst_req_n) begin
+        if (!rst_req_n) rst_sync <= 2'b00;
+        else            rst_sync <= {rst_sync[0], 1'b1};
+    end
+
+    assign rst_n = rst_sync[1];
 
 
     // -------------------------------------------------------------------------
     // CPU pipelined
     // -------------------------------------------------------------------------
-    pl_cpu cpu (
+    pl_cpu #(.CLK_HZ(10_000_000)) cpu (
         .clk          (clk),
         .rst_n        (rst_n),
         .PC           (),           // nao conectado no top-level da placa

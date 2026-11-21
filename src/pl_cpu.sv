@@ -17,7 +17,9 @@
 
 `timescale 1ns / 1ps
 
-module pl_cpu (
+module pl_cpu #(
+    parameter int CLK_HZ = 10_000_000   // clock do CPU (10 MHz com a PLL do pl_top)
+) (
     input  logic        clk,
     input  logic        rst_n,        // reset ativo-baixo assincrono
 
@@ -85,7 +87,7 @@ module pl_cpu (
     // -------------------------------------------------------------------------
     // Datapath
     // -------------------------------------------------------------------------
-    pl_datapath datapath (
+    pl_datapath #(.CLK_HZ(CLK_HZ)) datapath (
         .clk          (clk),
         .rst_n        (rst_n),
         .ALUSrc       (ALUSrc),

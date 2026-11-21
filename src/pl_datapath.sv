@@ -24,7 +24,9 @@
 
 import pl_pipe_pkg::*;
 
-module pl_datapath (
+module pl_datapath #(
+    parameter int CLK_HZ = 10_000_000   // clock do CPU (repassado ao pl_mmio)
+) (
     input  logic        clk,
     input  logic        rst_n,
 
@@ -392,7 +394,7 @@ module pl_datapath (
         .ReadData  (dmem_rd)
     );
 
-    pl_mmio mmio (
+    pl_mmio #(.CLK_HZ(CLK_HZ)) mmio (
         .clk       (clk),
         .rst_n     (rst_n),
         .MemWrite  (ex_mem.mem_write &  mmio_sel),

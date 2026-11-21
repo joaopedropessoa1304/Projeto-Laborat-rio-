@@ -277,10 +277,9 @@ rv32i_pipelined_base_project/
 │
 ├── assembler/
 │   ├── assembler.py            Montador Python: assembly → .mif / dump
-│   ├── hello.asm               Programa de entrada padrão
-│   ├── instruction.mif         MIF gerado (saída do assembler)
-│   ├── data.mif                MIF de dados gerado (modo --dump)
-│   └── program.hex             Hex gerado (modo normal)
+│   ├── hello.asm               Programa de entrada padrão (termina em halt)
+│   ├── instruction.mif         MIF gerado no modo normal
+│   └── program.hex             Hex gerado no modo normal
 │
 ├── dump/
 │   └── serial_dump.py          Captura e decodifica dump serial do FPGA
@@ -294,9 +293,11 @@ rv32i_pipelined_base_project/
 │   └── output.txt              Saída gerada na última simulação
 │
 └── quartus/                    Projeto Quartus Prime para síntese
-    ├── *.qpf / *.qsf           Arquivos de projeto Quartus
-    ├── instruction.mif         MIF da instrução (cópia de trabalho)
-    └── data.mif                MIF dos dados (cópia de trabalho)
+    ├── setup_projeto.tcl       Cria o projeto (dispositivo, top-level, arquivos, pinos)
+    ├── *.qpf / *.qsf           Projeto Quartus (gerado pelo script, não versionado)
+    ├── pl_top.sdc              Restrições de timing
+    ├── instruction.mif         MIF da instrução (gerado por assembler.py --dump)
+    └── data.mif                MIF dos dados (gerado por assembler.py --dump)
 ```
 
 ---
@@ -334,14 +335,22 @@ Estado final esperado: `x1=10  x2=20  x3=30  x4=10  x5=10  x6=30  x7=30  x8=20  
 
 ## Como sintetizar (Quartus)
 
-1. Abra o Quartus Prime e carregue `quartus/rv32i_pipelined_base_project.qpf`.
-2. Verifique que os arquivos `instruction.mif` e `data.mif` estão na pasta `quartus/`.
+1. Crie o projeto com o script (uma vez só): no terminal, dentro de `quartus/`, rode `quartus_sh -t setup_projeto.tcl`. Ele configura o dispositivo, o top-level `pl_top`, os arquivos de síntese (sem o testbench), o SDC e os 52 pinos.
+2. Abra `quartus/projeto.qpf` no Quartus. Os arquivos `instruction.mif` e `data.mif` são lidos da própria pasta `quartus/`.
 3. Execute **Processing → Start Compilation**.
-4. Grave o bitstream na DE2-115 via JTAG.
+4. Grave `quartus/output_files/projeto.sof` na DE2-115 via JTAG (**Tools → Programmer**).
+
+> Cuidado: o projeto precisa ficar dentro de `quartus/`. Se ele for criado na raiz do repositório, o Quartus não acha os `.mif` e acusa "Can't find Memory Initialization File". O `pl_cpu_tb.sv` e o `pl_top_no_pll.sv` não podem estar na lista de arquivos do projeto.
 
 **Dispositivo alvo:** Intel Cyclone IV E — EP4CE115F29C7  
 **Clock:** 50 MHz (entrada) → 10 MHz (saída da PLL, usado pelo CPU)  
-**Reset:** KEY\[0\] ativo-baixo; liberado após a PLL travar.
+**Reset:** KEY\[0\] ativo-baixo; liberado após a PLL travar (saída do reset sincronizada com o clock da CPU).
+
+### O que deve aparecer na placa (programa `hello.asm` com `--dump`)
+
+- Logo depois de gravar (ou de apertar e soltar KEY\[0\]), os **9 LEDs verdes acendem**: é o sinal de que o programa terminou e o dump foi enviado.
+- O `serial_dump.py` recebe 41 palavras e mostra `x1=0xA x2=0x14 x3=0x1E x4=0xA x5=0xA x6=0x1E x7=0x1E x8=0x14` e `dmem[0..3] = 0xA 0x14 0x1E 0x2`.
+- Abra o `serial_dump.py` **antes** de apertar KEY\[0\]: o dump é enviado uma vez só.
 
 ---
 
@@ -360,11 +369,14 @@ python3 assembler.py programa.asm
 # sem argumento — usa instructions.txt como padrão
 python3 assembler.py
 
-# modo dump — gera instruction.mif + data.mif com dump serial embutido
+# modo dump — gera quartus/instruction.mif + quartus/data.mif com dump serial
 python3 assembler.py --dump programa.asm
+
+# modo dump com dados iniciais na dmem (uma palavra hex por linha)
+python3 assembler.py --dump hello.asm --data ../modelsim/data.hex
 ```
 
-Todos os arquivos de saída são gerados na pasta `assembler/`.
+No modo normal os arquivos são gerados na pasta atual. No modo `--dump` eles vão direto para `quartus/`, onde o Quartus os lê.
 
 ### Modo normal
 
@@ -380,7 +392,9 @@ Anexa automaticamente o código de dump serial ao programa do usuário, sem que 
 | Arquivo | Conteúdo |
 |---------|----------|
 | `instruction.mif` | Código do usuário + `beq` de desvio + dump serial a partir de `0x080` |
-| `data.mif` | Zeros + constantes de infraestrutura do dump em `0x080–0x086` |
+| `data.mif` | Dados do `--data` (se houver) + zeros + constantes do dump em `0x080–0x087` |
+
+Se o programa terminar com o halt `beq x0,x0,0`, o modo `--dump` remove esse halt automaticamente; senão o CPU ficaria preso nele e nunca chegaria ao dump. O dump tem o próprio halt no final.
 
 **Layout da memória de instruções com `--dump`:**
 
@@ -388,7 +402,7 @@ Anexa automaticamente o código de dump serial ao programa do usuário, sem que 
 0x000..N-1  Código do usuário (máx. 127 instruções)
 0xN         beq x0,x0,→0x80   (desvio incondicional para o dump)
 0xN+1..07F  NOP (addi x0,x0,0)
-0x080..0x0AD  Dump serial — Parts 2–8 (46 instruções)
+0x080..0x0AE  Dump serial — Parts 2–8 (47 instruções)
 ```
 
 **Layout da memória de dados com `--dump`:**
@@ -396,7 +410,7 @@ Anexa automaticamente o código de dump serial ao programa do usuário, sem que 
 ```
 0x000..0x01F  Área do usuário  (byte 0x000–0x07C) — transmitida no dump
 0x078..0x07F  Saves de x1–x8  (byte 0x1E0–0x1FC) — escritos em runtime
-0x080..0x086  Constantes de infraestrutura         — inicializadas no MIF
+0x080..0x087  Constantes de infraestrutura         — inicializadas no MIF
 ```
 
 **O que o dump transmite via UART (164 bytes = 41 palavras):**
@@ -467,9 +481,8 @@ Aguarda **164 bytes** (41 palavras × ~4 ms a 9600 baud) e exibe ciclos, x1–x8
 
 ```bash
 cd assembler
-python3 assembler.py --dump meu_programa.asm  # gera instruction.mif + data.mif
-cp instruction.mif data.mif ../quartus/        # copia para o projeto Quartus
-# compilar e gravar na FPGA via Quartus...
+python3 assembler.py --dump meu_programa.asm  # gera quartus/instruction.mif + quartus/data.mif
+# compilar e gravar na FPGA via Quartus (o .mif só é lido na compilação)...
 cd ../dump
 python3 serial_dump.py COM3                    # captura o resultado
 ```

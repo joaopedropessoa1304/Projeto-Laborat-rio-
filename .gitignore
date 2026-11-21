@@ -9,3 +9,13 @@ modelsim/*
 assembler/*
 !assembler/assembler.py
 !assembler/hello.asm
+!quartus/instruction.mif
+!quartus/data.mif
+!quartus/setup_projeto.tcl
+!modelsim/teste_etapa1/
+
+# saidas do Quartus caso o projeto seja aberto fora de quartus/
+db/
+incremental_db/
+output_files/
+*.qws

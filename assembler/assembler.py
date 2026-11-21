@@ -37,11 +37,13 @@ DUMP_START = 0x80
 
 # Data memory layout (word addresses):
 #   0x000..0x01F : user data area (byte 0x000..0x07C) — sent in mem dump
-#   0x072..0x079 : saves x1-x8  (byte 0x1C8..0x1E4)  — written at runtime
-#   0x080..0x086 : infrastructure constants            — initialised in data.mif
+#   0x078..0x07F : saves x1-x8  (byte 0x1E0..0x1FC)  — written at runtime
+#   0x080..0x087 : infrastructure constants            — initialised in data.mif
 SAVES_WBASE = 0x78               # first word address of saves area
-SAVES_BBASE = SAVES_WBASE * 4    # = 0x1C8 = 456  (byte offset for sw from x0)
-SAVES_BEND  = (SAVES_WBASE + 8) * 4  # = 0x1E8 = 488  (exclusive end for loop)
+SAVES_BBASE = SAVES_WBASE * 4    # = 0x1E0 = 480  (byte offset for sw from x0)
+SAVES_BEND  = (SAVES_WBASE + 8) * 4  # = 0x200 = 512  (exclusive end for loop)
+MEM_DUMP_WORDS = 32              # dmem[0x000..0x07C] enviado no dump (32 palavras)
+MEM_DUMP_BEND  = MEM_DUMP_WORDS * 4  # = 0x080 (exclusive end for mem loop)
 
 INFRA_WBASE = 0x80
 INFRA_BBASE = INFRA_WBASE * 4   # = 0x200 = 512  (fits in 12-bit signed imm)
@@ -51,7 +53,8 @@ NOP_WORD = "00000013"  # addi x0, x0, 0
 # Register allocation in dump code:
 #   x13=status tmp, x14=ptr, x15=UART addr, x16=ptr end,
 #   x17=tx_busy mask, x18=step, x19=word to send,
-#   x20=MMIO base, x21=LEDG, x22=CYCLE addr, x23=saves start, x24=saves end
+#   x20=MMIO base, x21=LEDG, x22=CYCLE addr, x23=saves start, x24=saves end,
+#   x25=mem dump end
 INFRA_DATA = [
     (INFRA_WBASE + 0, 0x00000410, "UART TX/status addr      -> x15"),
     (INFRA_WBASE + 1, 0x00000200, "tx_busy mask (bit 9)     -> x17"),
@@ -60,6 +63,7 @@ INFRA_DATA = [
     (INFRA_WBASE + 4, 0x000001FF, "LEDG all-on 0x1FF        -> x21"),
     (INFRA_WBASE + 5, SAVES_BBASE, f"saves start byte 0x{SAVES_BBASE:03X} -> x23"),
     (INFRA_WBASE + 6, SAVES_BEND,  f"saves end   byte 0x{SAVES_BEND:03X} -> x24"),
+    (INFRA_WBASE + 7, MEM_DUMP_BEND, f"mem end     byte 0x{MEM_DUMP_BEND:03X} -> x25"),
 ]
 
 INSTRUCTION = {
@@ -554,7 +558,7 @@ def build_dump_code():
 	b = INFRA_BBASE  # byte base for infrastructure lw offsets (0x200)
 	code = []
 
-	# Part 2: save x1-x8 to dmem word addr 0x72-0x79 (byte 0x1C8-0x1E4)
+	# Part 2: save x1-x8 to dmem word addr 0x78-0x7F (byte 0x1E0-0x1FC)
 	for i in range(1, 9):
 		code.append((f"sw x{i},{SAVES_BBASE + (i-1)*4}(x0)",
 		             f"x{i} -> dmem[0x{SAVES_WBASE + i - 1:02X}]"))
@@ -565,8 +569,9 @@ def build_dump_code():
 	code.append((f"lw x18,{b+8}(x0)",  "x18 = 4      step"))
 	code.append((f"lw x20,{b+12}(x0)", "x20 = 0x400  MMIO base"))
 	code.append((f"lw x21,{b+16}(x0)", "x21 = 0x1FF  LEDG all-on"))
-	code.append((f"lw x23,{b+20}(x0)", "x23 = 0x80   saves start"))
-	code.append((f"lw x24,{b+24}(x0)", "x24 = 0xFC   saves end"))
+	code.append((f"lw x23,{b+20}(x0)", f"x23 = 0x{SAVES_BBASE:03X}  saves start"))
+	code.append((f"lw x24,{b+24}(x0)", f"x24 = 0x{SAVES_BEND:03X}  saves end"))
+	code.append((f"lw x25,{b+28}(x0)", f"x25 = 0x{MEM_DUMP_BEND:03X}  mem dump end"))
 
 	# Part 4: send cycle count (MMIO 0x414)
 	code.append(("add x22,x15,x18",  "x22 = 0x414  CYCLE MMIO"))
@@ -577,9 +582,9 @@ def build_dump_code():
 	code.append(("beq x0,x0,-12",    "      busy? -> POLL"))
 	code.append(("sw x19,0(x15)",    "SEND  cycles (4 bytes hw)"))
 
-	# Part 5: loop — send x1-x31 from dmem[0x80..0xF8]
-	code.append(("add x14,x23,x0",  "x14 = 0x80  saves start ptr"))
-	code.append(("add x16,x24,x0",  "x16 = 0xFC  saves end ptr"))
+	# Part 5: loop — send x1-x8 from the saves area
+	code.append(("add x14,x23,x0",  "x14 = saves start ptr"))
+	code.append(("add x16,x24,x0",  "x16 = saves end ptr"))
 	# REG_LOOP:
 	code.append(("lw x19,0(x14)",   "REG_LOOP: load saved reg"))
 	code.append(("lw x13,0(x15)",   "POLL"))
@@ -593,7 +598,7 @@ def build_dump_code():
 
 	# Part 6: loop — send dmem[0x000..0x07C]
 	code.append(("add x14,x0,x0",   "x14 = 0     mem start ptr"))
-	code.append(("add x16,x23,x0",  "x16 = 0x80  mem end ptr"))
+	code.append(("add x16,x25,x0",  "x16 = 0x80  mem end ptr (32 palavras)"))
 	# MEM_LOOP:
 	code.append(("lw x19,0(x14)",   "MEM_LOOP: load mem word"))
 	code.append(("lw x13,0(x15)",   "POLL"))
@@ -645,11 +650,13 @@ def main_normal(src):
 	print(f"  program.hex     : {len(hex_words)} instruction(s)")
 
 
-def main_dump(src):
+def main_dump(src, data_hex=None):
 	"""--dump mode: user code + jump + dump at 0x80 -> quartus/instruction.mif + quartus/data.mif."""
 	script_dir = os.path.dirname(os.path.abspath(__file__))
-	instr_path = os.path.join(script_dir, "instruction.mif")
-	data_path  = os.path.join(script_dir, "data.mif")
+	out_dir    = os.path.normpath(os.path.join(script_dir, "..", "quartus"))
+	os.makedirs(out_dir, exist_ok=True)
+	instr_path = os.path.join(out_dir, "instruction.mif")
+	data_path  = os.path.join(out_dir, "data.mif")
 
 	# ---- Assemble user instructions ----------------------------------------
 	raw_lines = read_file(src)
@@ -663,6 +670,12 @@ def main_dump(src):
 			print(f"Translation failed on line {lineno}: '{instr}'")
 			exit(2)
 		user_encoded.append((f"{int(binary, 2):08X}", instr))
+
+	# Um halt (beq x0,x0,0) no fim do codigo do usuario impediria o desvio
+	# para o dump: o CPU ficaria preso nele. Remove-o; o dump tem o proprio halt.
+	while user_encoded and user_encoded[-1][0] == "00000063":
+		print(f"  aviso: halt final '{user_encoded[-1][1]}' removido (o dump faz o halt)")
+		user_encoded.pop()
 
 	n_user = len(user_encoded)
 	if n_user >= DUMP_START:
@@ -694,6 +707,17 @@ def main_dump(src):
 	nop_end    = DUMP_START - 1
 	has_nop    = nop_start <= nop_end
 	dump_end   = DUMP_START + len(dump_encoded) - 1
+
+	# ---- Dados iniciais do usuario (opcional, --data arquivo.hex) ----------
+	user_data = []
+	if data_hex:
+		for tok in read_file(data_hex):
+			tok = tok.strip()
+			if tok:
+				user_data.append(int(tok, 16) & 0xFFFFFFFF)
+		if len(user_data) > MEM_DUMP_WORDS:
+			print(f"Erro: --data tem {len(user_data)} palavras; o maximo e {MEM_DUMP_WORDS}.")
+			exit(5)
 
 	# ---- Write instruction.mif ---------------------------------------------
 	with open(instr_path, "w") as f:
@@ -744,6 +768,10 @@ def main_dump(src):
 		f.write("DATA_RADIX = HEX;\n")
 		f.write("CONTENT\nBEGIN\n\n")
 		f.write("[000..0FF] : 00000000;  -- zeros por padrao\n\n")
+		for word_addr, value in enumerate(user_data):
+			f.write(f"{word_addr:03X} : {value:08X};  -- dado do usuario\n")
+		if user_data:
+			f.write("\n")
 		for word_addr, value, desc in INFRA_DATA:
 			f.write(f"{word_addr:03X} : {value:08X};  -- {desc}\n")
 		f.write("\nEND;\n")
@@ -758,6 +786,8 @@ def main_dump(src):
 	print(f"    dump code (0x{DUMP_START:03X}..0x{dump_end:03X},"
 	      f" {len(dump_encoded)} instrucoes)")
 	print(f"\n  {data_path}")
+	if user_data:
+		print(f"    {len(user_data)} palavra(s) do usuario em 0x000..0x{len(user_data)-1:03X}")
 	print(f"    zeros + constantes em"
 	      f" 0x{INFRA_WBASE:03X}..0x{INFRA_WBASE + len(INFRA_DATA) - 1:03X}")
 
@@ -781,10 +811,18 @@ def main():
 			"codigo do usuario. Gera quartus/instruction.mif e quartus/data.mif."
 		),
 	)
+	parser.add_argument(
+		"--data",
+		metavar="ARQ.hex",
+		help=(
+			"(modo --dump) arquivo .hex (uma palavra por linha, como modelsim/data.hex) "
+			"com os dados iniciais da dmem a partir do endereco 0x000."
+		),
+	)
 	args = parser.parse_args()
 
 	if args.dump:
-		main_dump(args.file)
+		main_dump(args.file, args.data)
 	else:
 		main_normal(args.file)
 
