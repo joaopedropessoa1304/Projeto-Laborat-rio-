@@ -239,6 +239,7 @@ module pl_cpu_tb;
         integer gfd, ofd;
         string  gline, oline;
         integer errs;
+        integer rc;
         errs = 0;
 
         gfd = $fopen("golden.txt", "r");
@@ -254,8 +255,8 @@ module pl_cpu_tb;
         end
 
         while (!$feof(gfd)) begin
-            void'($fgets(gline, gfd));
-            void'($fgets(oline, ofd));
+            rc = $fgets(gline, gfd);
+            rc = $fgets(oline, ofd);
             if (gline != oline) begin
                 $display("DIFF golden: %s  output: %s", gline, oline);
                 errs++;
